@@ -1,6 +1,5 @@
 package mate.academy.accommodationbookingservice.service.notification;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -11,7 +10,6 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Service
 public class TelegramNotificationService implements NotificationService {
-    private final String botToken;
     private final String chatId;
     private final TelegramBot bot;
 
@@ -25,7 +23,6 @@ public class TelegramNotificationService implements NotificationService {
                     "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in .env");
         }
 
-        this.botToken = botToken;
         this.chatId = chatId;
         this.bot = new TelegramBot(botToken);
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
