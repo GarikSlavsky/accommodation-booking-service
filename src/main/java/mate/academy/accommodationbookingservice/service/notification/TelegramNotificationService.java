@@ -1,6 +1,7 @@
 package mate.academy.accommodationbookingservice.service.notification;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,18 +15,18 @@ public class TelegramNotificationService implements NotificationService {
     private final String chatId;
     private final TelegramBot bot;
 
-    public TelegramNotificationService() throws TelegramApiException {
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing() // Don’t fail if .env is missing (optional)
-                .load();
-        this.botToken = dotenv.get("TELEGRAM_BOT_TOKEN");
-        this.chatId = dotenv.get("TELEGRAM_CHAT_ID");
+    public TelegramNotificationService(
+            @Value("${telegram.bot.token}") String botToken,
+            @Value("${telegram.chat.id}") String chatId
+    ) throws TelegramApiException {
 
         if (botToken == null || chatId == null) {
             throw new IllegalStateException(
                     "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in .env");
         }
 
+        this.botToken = botToken;
+        this.chatId = chatId;
         this.bot = new TelegramBot(botToken);
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         botsApi.registerBot(this.bot);

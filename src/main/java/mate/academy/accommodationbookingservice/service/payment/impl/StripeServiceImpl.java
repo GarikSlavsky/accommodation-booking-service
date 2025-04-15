@@ -13,6 +13,7 @@ import mate.academy.accommodationbookingservice.model.Payment;
 import mate.academy.accommodationbookingservice.service.payment.StripeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,12 +25,12 @@ public class StripeServiceImpl implements StripeService {
     private static final String CANCEL_PATH = "/payments/cancel";
     private static final String URL_QUERY_PARAM = "?session_id={CHECKOUT_SESSION_ID}";
 
+    @Value("${stripe.secret.key}")
+    private String secretKey;
+
     @PostConstruct
     public void init() {
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
-        Stripe.apiKey = dotenv.get("STRIPE_SECRET_KEY");
+        Stripe.apiKey = secretKey;
     }
 
     @Override
