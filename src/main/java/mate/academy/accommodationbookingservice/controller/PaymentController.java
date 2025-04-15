@@ -1,6 +1,5 @@
 package mate.academy.accommodationbookingservice.controller;
 
-import com.stripe.exception.StripeException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.accommodationbookingservice.dto.payment.PaymentRequestDto;
