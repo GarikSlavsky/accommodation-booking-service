@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 05-assign-user-as-manager
+      author: your-name
+      changes:
+        - update:
+            tableName: users
+            columns:
+              - column:
+                  name: role
+                  value: MANAGER
+            where: email = 'emily@mail.com'

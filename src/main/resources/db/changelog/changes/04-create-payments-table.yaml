@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 04-create-payments-table
+      author: mate-academy
+      changes:
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: booking_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_payments_bookings
+                    references: bookings(id)
+              - column:
+                  name: session_url
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: session_id
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_to_pay
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false

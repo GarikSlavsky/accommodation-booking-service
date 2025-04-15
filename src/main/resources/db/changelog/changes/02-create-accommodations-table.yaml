@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-create-accommodations-table
+      author: mate-academy
+      changes:
+        - createTable:
+            tableName: accommodations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size
+                  type: VARCHAR(255)
+              - column:
+                  name: daily_rate
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: availability
+                  type: INTEGER
+              - column:
+                  name: is_deleted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: accommodation_amenities
+            columns:
+              - column:
+                  name: accommodation_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_accommodation_amenities_accommodations
+                    references: accommodations(id)
+              - column:
+                  name: amenities
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
