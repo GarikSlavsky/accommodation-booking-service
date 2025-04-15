@@ -5,8 +5,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.accommodationbookingservice.model.Accommodation;
 import mate.academy.accommodationbookingservice.model.Booking;
-import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import mate.academy.accommodationbookingservice.repository.BookingRepository;
+import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

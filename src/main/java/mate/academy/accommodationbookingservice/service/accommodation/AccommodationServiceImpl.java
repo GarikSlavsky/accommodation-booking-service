@@ -7,8 +7,8 @@ import mate.academy.accommodationbookingservice.dto.accommodation.AccommodationR
 import mate.academy.accommodationbookingservice.dto.accommodation.AccommodationResponseDto;
 import mate.academy.accommodationbookingservice.mapper.AccommodationMapper;
 import mate.academy.accommodationbookingservice.model.Accommodation;
-import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import mate.academy.accommodationbookingservice.repository.AccommodationRepository;
+import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 

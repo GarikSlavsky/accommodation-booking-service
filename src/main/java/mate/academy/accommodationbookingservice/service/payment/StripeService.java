@@ -1,7 +1,7 @@
 package mate.academy.accommodationbookingservice.service.payment;
 
-import java.math.BigDecimal;
 import com.stripe.model.checkout.Session;
+import java.math.BigDecimal;
 import mate.academy.accommodationbookingservice.model.Booking;
 import mate.academy.accommodationbookingservice.model.Payment;
 
