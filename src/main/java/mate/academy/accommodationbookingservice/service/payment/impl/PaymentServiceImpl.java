@@ -1,11 +1,8 @@
 package mate.academy.accommodationbookingservice.service.payment;
 
-import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
-import io.github.cdimascio.dotenv.Dotenv;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,31 +21,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
-    private static final String SUCCESS_PATH = "/payments/success";
-    private static final String CANCEL_PATH = "/payments/cancel";
-    private static final String URL_QUERY_PARAM = "?session_id={CHECKOUT_SESSION_ID}";
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
     private final NotificationService notificationService;
+    private final StripeService stripeService;
     private final PaymentMapper paymentMapper;
 
-    @PostConstruct
-    public void init() {
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
-        Stripe.apiKey = dotenv.get("STRIPE_SECRET_KEY");
-    }
-
     @Override
-    public PaymentResponseDto initiatePayment(Long bookingId, User currentUser)
-            throws StripeException {
+    public PaymentResponseDto initiatePayment(Long bookingId, User currentUser) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Booking not found with ID: " + bookingId));
@@ -61,13 +46,8 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalStateException("Payment already exists for this booking.");
         }
 
-        long days = booking.getCheckInDate().until(booking.getCheckOutDate()).getDays();
-        BigDecimal amountToPay = booking.getAccommodation()
-                .getDailyRate()
-                .multiply(BigDecimal.valueOf(days));
-
-        SessionCreateParams params = getSessionCreateParams(amountToPay, bookingId);
-        Session session = Session.create(params);
+        BigDecimal amountToPay = calculateAmountToPay(booking);
+        Session session = stripeService.createSession(booking, amountToPay);
         Payment payment = initializePayment(booking, session, amountToPay);
         Payment savedPayment = paymentRepository.save(payment);
         notificationService.sendNotification(
@@ -97,34 +77,22 @@ public class PaymentServiceImpl implements PaymentService {
         List<Payment> pendingPayments =
                 paymentRepository.findAllByStatus(Payment.PaymentStatus.PENDING);
         logger.info("Checking {} pending payments for expiration", pendingPayments.size());
-
         for (Payment payment : pendingPayments) {
-            try {
-                Session session = Session.retrieve(payment.getSessionId());
-                if (session.getExpiresAt() != null
-                        && session.getExpiresAt() < System.currentTimeMillis() / 1000) {
-                    payment.setStatus(Payment.PaymentStatus.EXPIRED);
-                    paymentRepository.save(payment);
-                    notificationService.sendNotification(
-                            String.format("Payment session expired for Booking ID=%d: Amount=$%.2f",
-                                    payment.getBooking().getId(), payment.getAmountToPay())
-                    );
-                    logger.info("Payment ID={} marked as EXPIRED for Booking ID={}",
-                            payment.getId(), payment.getBooking().getId());
-                }
-            } catch (StripeException e) {
-                logger.error("Failed to check Stripe session for Payment ID={}: {}",
-                        payment.getId(), e.getMessage());
-                throw new RuntimeException("Stripe API error while checking session for Payment ID="
-                        + payment.getId() + ": " + e.getMessage(), e);
+            if (stripeService.isSessionExpired(payment)) {
+                payment.setStatus(Payment.PaymentStatus.EXPIRED);
+                paymentRepository.save(payment);
+                notificationService.sendNotification(
+                        String.format("Payment session expired for Booking ID=%d: Amount=$%.2f",
+                                payment.getBooking().getId(), payment.getAmountToPay())
+                );
+                logger.info("Payment ID={} marked as EXPIRED for Booking ID={}",
+                        payment.getId(), payment.getBooking().getId());
             }
         }
     }
 
     @Override
-    public PaymentResponseDto renewPaymentSession(Long paymentId, User currentUser)
-            throws StripeException {
-
+    public PaymentResponseDto renewPaymentSession(Long paymentId, User currentUser) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Payment not found with ID: " + paymentId));
@@ -138,9 +106,8 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         Booking booking = payment.getBooking();
-        BigDecimal amountToPay = payment.getAmountToPay();
-        SessionCreateParams params = getSessionCreateParams(amountToPay, booking.getId());
-        Session session = Session.create(params);
+        BigDecimal amountToPay = calculateAmountToPay(booking);
+        Session session = stripeService.createSession(booking, amountToPay);
 
         payment.setSessionUrl(session.getUrl());
         payment.setSessionId(session.getId());
@@ -157,16 +124,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String handlePaymentSuccess(String sessionId) {
         validateSessionId(sessionId);
-        Session session;
-        try {
-            session = Session.retrieve(sessionId);
-        } catch (StripeException e) {
-            logger.error("Failed to retrieve payment session: {}", sessionId, e);
-            throw new RuntimeException(
-                    "Unable to process payment at this time. Please try again later.");
-        }
-
+        Session session = stripeService.retrieveSession(sessionId);
         Payment payment = retrievePayment(sessionId);
+
         if ("paid".equals(session.getPaymentStatus())) {
             payment.setStatus(Payment.PaymentStatus.PAID);
             paymentRepository.save(payment);
@@ -190,6 +150,13 @@ public class PaymentServiceImpl implements PaymentService {
         return "Payment canceled. You can try again later.";
     }
 
+    private BigDecimal calculateAmountToPay(Booking booking) {
+        long days = booking.getCheckInDate().until(booking.getCheckOutDate()).getDays();
+        return booking.getAccommodation()
+                .getDailyRate()
+                .multiply(BigDecimal.valueOf(days));
+    }
+
     private Payment initializePayment(Booking booking, Session session, BigDecimal amountToPay) {
         Payment payment = new Payment();
         payment.setBooking(booking);
@@ -206,38 +173,6 @@ public class PaymentServiceImpl implements PaymentService {
             throw new AccessDeniedException(
                     "You can only view your own payments unless you’re a manager.");
         }
-    }
-
-    private String buildUrl(String path) {
-        return UriComponentsBuilder.fromUriString("http://localhost:8080")
-                .path(path)
-                .toUriString();
-    }
-
-    private SessionCreateParams getSessionCreateParams(BigDecimal amountToPay, Long bookingId) {
-        return SessionCreateParams.builder()
-                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-                .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl(buildUrl(SUCCESS_PATH) + URL_QUERY_PARAM)
-                .setCancelUrl(buildUrl(CANCEL_PATH) + URL_QUERY_PARAM)
-                .addLineItem(SessionCreateParams.LineItem
-                        .builder()
-                        .setPriceData(SessionCreateParams.LineItem
-                                .PriceData
-                                .builder()
-                                .setCurrency("usd")
-                                .setUnitAmount(amountToPay.multiply(
-                                        BigDecimal.valueOf(100)).longValue())
-                                .setProductData(SessionCreateParams.LineItem
-                                        .PriceData
-                                        .ProductData
-                                        .builder()
-                                        .setName("Booking #" + bookingId)
-                                        .build())
-                                .build())
-                        .setQuantity(1L)
-                        .build())
-                .build();
     }
 
     private void validateSessionId(String sessionId) {
