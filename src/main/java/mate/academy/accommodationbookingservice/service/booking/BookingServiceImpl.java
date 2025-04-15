@@ -15,7 +15,7 @@ import mate.academy.accommodationbookingservice.model.Accommodation;
 import mate.academy.accommodationbookingservice.model.Booking;
 import mate.academy.accommodationbookingservice.model.Payment;
 import mate.academy.accommodationbookingservice.model.User;
-import mate.academy.accommodationbookingservice.notification.NotificationService;
+import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import mate.academy.accommodationbookingservice.repository.AccommodationRepository;
 import mate.academy.accommodationbookingservice.repository.BookingRepository;
 import mate.academy.accommodationbookingservice.repository.PaymentRepository;

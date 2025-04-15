@@ -1,8 +1,6 @@
-package mate.academy.accommodationbookingservice.service.payment;
+package mate.academy.accommodationbookingservice.service.payment.impl;
 
-import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
-import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,9 +10,11 @@ import mate.academy.accommodationbookingservice.mapper.PaymentMapper;
 import mate.academy.accommodationbookingservice.model.Booking;
 import mate.academy.accommodationbookingservice.model.Payment;
 import mate.academy.accommodationbookingservice.model.User;
-import mate.academy.accommodationbookingservice.notification.NotificationService;
+import mate.academy.accommodationbookingservice.service.notification.NotificationService;
 import mate.academy.accommodationbookingservice.repository.BookingRepository;
 import mate.academy.accommodationbookingservice.repository.PaymentRepository;
+import mate.academy.accommodationbookingservice.service.payment.PaymentService;
+import mate.academy.accommodationbookingservice.service.payment.StripeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package mate.academy.accommodationbookingservice.notification;
+package mate.academy.accommodationbookingservice.service.notification;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.stereotype.Service;

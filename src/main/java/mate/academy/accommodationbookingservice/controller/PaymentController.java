@@ -44,8 +44,7 @@ public class PaymentController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     public PaymentResponseDto initiatePayment(
-            @RequestBody PaymentRequestDto requestDto,
-            Authentication authentication) throws StripeException {
+            @RequestBody PaymentRequestDto requestDto, Authentication authentication) {
 
         User currentUser = (User) authentication.getPrincipal();
         return paymentService.initiatePayment(requestDto.getBookingId(), currentUser);
@@ -54,16 +53,14 @@ public class PaymentController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/renew/{paymentId}")
     public PaymentResponseDto renewPaymentSession(
-            @PathVariable Long paymentId,
-            Authentication authentication) throws StripeException {
+            @PathVariable Long paymentId, Authentication authentication) {
 
         User currentUser = (User) authentication.getPrincipal();
         return paymentService.renewPaymentSession(paymentId, currentUser);
     }
 
     @GetMapping("/success")
-    public String handlePaymentSuccess(@RequestParam("session_id") String sessionId)
-            throws StripeException {
+    public String handlePaymentSuccess(@RequestParam("session_id") String sessionId) {
         return paymentService.handlePaymentSuccess(sessionId);
     }
 

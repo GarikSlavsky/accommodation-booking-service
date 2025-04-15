@@ -1,4 +1,4 @@
-package mate.academy.accommodationbookingservice.notification;
+package mate.academy.accommodationbookingservice.service.notification;
 
 public interface NotificationService {
     void sendNotification(String message);

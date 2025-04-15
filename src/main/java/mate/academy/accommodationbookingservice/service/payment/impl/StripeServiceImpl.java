@@ -1,4 +1,4 @@
-package mate.academy.accommodationbookingservice.service.payment;
+package mate.academy.accommodationbookingservice.service.payment.impl;
 
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import mate.academy.accommodationbookingservice.model.Booking;
 import mate.academy.accommodationbookingservice.model.Payment;
+import mate.academy.accommodationbookingservice.service.payment.StripeService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
