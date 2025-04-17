@@ -1,8 +1,8 @@
 package accommodationbookingservice.service.payment;
 
-import java.util.List;
 import accommodationbookingservice.dto.payment.PaymentResponseDto;
 import accommodationbookingservice.model.User;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 
 public interface PaymentService {

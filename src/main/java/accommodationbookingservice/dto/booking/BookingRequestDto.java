@@ -1,10 +1,10 @@
 package accommodationbookingservice.dto.booking;
 
+import accommodationbookingservice.validation.bookingdate.CheckInBeforeCheckOut;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Data;
-import accommodationbookingservice.validation.bookingdate.CheckInBeforeCheckOut;
 
 @Data
 @CheckInBeforeCheckOut

@@ -1,11 +1,11 @@
 package accommodationbookingservice.mapper;
 
-import java.util.Optional;
 import accommodationbookingservice.config.MapperConfig;
 import accommodationbookingservice.dto.booking.BookingRequestDto;
 import accommodationbookingservice.dto.booking.BookingResponseDto;
 import accommodationbookingservice.model.Accommodation;
 import accommodationbookingservice.model.Booking;
+import java.util.Optional;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

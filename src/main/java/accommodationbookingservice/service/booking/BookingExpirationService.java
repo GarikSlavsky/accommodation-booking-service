@@ -1,12 +1,12 @@
 package accommodationbookingservice.service.booking;
 
-import java.time.LocalDate;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
 import accommodationbookingservice.model.Accommodation;
 import accommodationbookingservice.model.Booking;
 import accommodationbookingservice.repository.BookingRepository;
 import accommodationbookingservice.service.notification.NotificationService;
+import java.time.LocalDate;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

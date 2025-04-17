@@ -1,15 +1,15 @@
 package accommodationbookingservice.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import accommodationbookingservice.dto.user.request.PasswordUpdateRequestDto;
 import accommodationbookingservice.dto.user.request.UserRoleUpdateRequestDto;
 import accommodationbookingservice.dto.user.request.UserUpdateRequestDto;
 import accommodationbookingservice.dto.user.response.UserResponseDto;
 import accommodationbookingservice.model.User;
 import accommodationbookingservice.service.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

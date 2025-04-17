@@ -1,4 +1,4 @@
-package mate.academy.accommodationbookingservice.dto.accommodation;
+package accommodationbookingservice.dto.accommodation;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

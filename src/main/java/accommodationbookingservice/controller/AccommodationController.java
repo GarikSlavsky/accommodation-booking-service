@@ -1,12 +1,12 @@
 package accommodationbookingservice.controller;
 
+import accommodationbookingservice.dto.accommodation.AccommodationRequestDto;
+import accommodationbookingservice.dto.accommodation.AccommodationResponseDto;
+import accommodationbookingservice.service.accommodation.AccommodationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import accommodationbookingservice.dto.accommodation.AccommodationRequestDto;
-import accommodationbookingservice.dto.accommodation.AccommodationResponseDto;
-import accommodationbookingservice.service.accommodation.AccommodationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,8 @@
 package accommodationbookingservice.dto.payment;
 
+import accommodationbookingservice.model.Payment;
 import java.math.BigDecimal;
 import lombok.Data;
-import accommodationbookingservice.model.Payment;
 
 @Data
 public class PaymentResponseDto {

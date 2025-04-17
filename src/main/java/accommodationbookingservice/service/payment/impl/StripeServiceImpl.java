@@ -1,5 +1,8 @@
 package accommodationbookingservice.service.payment.impl;
 
+import accommodationbookingservice.model.Booking;
+import accommodationbookingservice.model.Payment;
+import accommodationbookingservice.service.payment.StripeService;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -7,9 +10,6 @@ import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
-import accommodationbookingservice.model.Booking;
-import accommodationbookingservice.model.Payment;
-import accommodationbookingservice.service.payment.StripeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

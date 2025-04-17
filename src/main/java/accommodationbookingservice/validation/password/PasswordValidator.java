@@ -1,9 +1,9 @@
 package accommodationbookingservice.validation.password;
 
+import accommodationbookingservice.dto.user.request.UserRegistrationRequestDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Objects;
-import accommodationbookingservice.dto.user.request.UserRegistrationRequestDto;
 
 public class PasswordValidator
         implements ConstraintValidator<FieldMatch, UserRegistrationRequestDto> {

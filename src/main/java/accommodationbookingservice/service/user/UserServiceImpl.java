@@ -1,7 +1,5 @@
 package accommodationbookingservice.service.user;
 
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 import accommodationbookingservice.dto.user.request.PasswordUpdateRequestDto;
 import accommodationbookingservice.dto.user.request.UserRegistrationRequestDto;
 import accommodationbookingservice.dto.user.request.UserUpdateRequestDto;
@@ -10,6 +8,8 @@ import accommodationbookingservice.exceptions.RegistrationException;
 import accommodationbookingservice.mapper.UserMapper;
 import accommodationbookingservice.model.User;
 import accommodationbookingservice.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
