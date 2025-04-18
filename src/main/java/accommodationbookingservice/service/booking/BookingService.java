@@ -3,6 +3,7 @@ package accommodationbookingservice.service.booking;
 import accommodationbookingservice.dto.booking.BookingRequestDto;
 import accommodationbookingservice.dto.booking.BookingResponseDto;
 import accommodationbookingservice.dto.booking.BookingStatusPatchRequestDto;
+import accommodationbookingservice.model.Booking;
 import accommodationbookingservice.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +11,8 @@ import org.springframework.data.domain.Pageable;
 public interface BookingService {
     BookingResponseDto createBooking(BookingRequestDto requestDto, User currentUser);
 
-    Page<BookingResponseDto> getBookings(Long userId, String status, Pageable pageable);
+    Page<BookingResponseDto> getBookings(
+            Long userId, Booking.BookingStatus status, Pageable pageable);
 
     Page<BookingResponseDto> getBookingsByUser(Long userId, Pageable pageable);
 

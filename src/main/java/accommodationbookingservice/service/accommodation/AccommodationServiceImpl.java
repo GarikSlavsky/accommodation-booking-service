@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     private final AccommodationMapper accommodationMapper;
     private final NotificationService notificationService;
 
+    @Transactional
     @Override
     public AccommodationResponseDto addAccommodation(AccommodationRequestDto requestDto) {
         Accommodation accommodation = accommodationMapper.intoModel(requestDto);

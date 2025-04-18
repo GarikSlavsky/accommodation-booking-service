@@ -1,5 +1,6 @@
 package accommodationbookingservice.dto.accommodation;
 
+import accommodationbookingservice.model.Accommodation;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -9,7 +10,7 @@ import lombok.Data;
 @Data
 public class AccommodationRequestDto {
     @NotNull(message = "Accommodation type cannot be null.")
-    private String type;
+    private Accommodation.AccommodationType type;
 
     @NotBlank(message = "Location cannot be blank.")
     private String location;

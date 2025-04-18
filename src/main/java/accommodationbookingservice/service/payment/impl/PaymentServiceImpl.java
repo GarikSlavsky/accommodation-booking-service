@@ -17,10 +17,12 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final StripeService stripeService;
     private final PaymentMapper paymentMapper;
 
+    @Transactional
     @Override
     public PaymentResponseDto initiatePayment(Long bookingId, User currentUser) {
         Booking booking = retrieveBookingById(bookingId);
@@ -55,20 +58,19 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.intoDto(savedPayment);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<PaymentResponseDto> getPaymentsForUser(
+    public Page<PaymentResponseDto> getPaymentsForUser(
             Long userId, User currentUser, Pageable pageable) {
 
         checkoutAccessForUser(userId, currentUser);
-        List<Payment> payments = currentUser.getAuthorities().contains("ROLE_MANAGER")
-                ? paymentRepository.findAll()
-                : paymentRepository.findAllByBookingUserId(userId);
-
-        return payments.stream()
-                .map(paymentMapper::intoDto)
-                .toList();
+        Page<Payment> payments = currentUser.getRoles().contains(User.UserRole.ROLE_MANAGER)
+                ? paymentRepository.findAll(pageable)
+                : paymentRepository.findAllByBookingUserId(userId, pageable);
+        return payments.map(paymentMapper::intoDto);
     }
 
+    @Transactional
     @Scheduled(fixedRate = 60000)
     public void checkExpiredStripeSessions() {
         List<Payment> pendingPayments =
@@ -88,6 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    @Transactional
     @Override
     public PaymentResponseDto renewPaymentSession(Long paymentId, User currentUser) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -105,7 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
         Booking booking = retrieveBookingById(payment.getBooking().getId());
         BigDecimal amountToPay = calculateAmountToPay(booking);
         Session session = stripeService.createSession(booking, amountToPay);
-        System.out.println(session.getPaymentStatus());
+
         payment.setSessionUrl(session.getUrl());
         payment.setSessionId(session.getId());
         payment.setStatus(Payment.PaymentStatus.PENDING);
@@ -118,6 +121,7 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.intoDto(updatedPayment);
     }
 
+    @Transactional
     @Override
     public String handlePaymentSuccess(String sessionId) {
         validateSessionId(sessionId);
@@ -137,6 +141,7 @@ public class PaymentServiceImpl implements PaymentService {
         return "Payment status pending. Please check later.";
     }
 
+    @Transactional(readOnly = true)
     @Override
     public String handlePaymentCancel(String sessionId) {
         validateSessionId(sessionId);
@@ -167,7 +172,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void checkoutAccessForUser(Long userId, User currentUser) {
         if (!currentUser.getId().equals(userId)
-                && !currentUser.getAuthorities().contains("ROLE_MANAGER")) {
+                && !currentUser.getRoles().contains(User.UserRole.ROLE_MANAGER)) {
             throw new AccessDeniedException(
                     "You can only view your own payments unless you’re a manager.");
         }

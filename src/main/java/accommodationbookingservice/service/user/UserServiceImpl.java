@@ -9,6 +9,7 @@ import accommodationbookingservice.mapper.UserMapper;
 import accommodationbookingservice.model.User;
 import accommodationbookingservice.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     @Override
     public UserResponseDto updateUserName(String email, UserUpdateRequestDto updateDto) {
         User user = retrieveUserByEmail(email);
@@ -29,6 +31,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.intoDto(updatedUser);
     }
 
+    @Transactional
     @Override
     public UserResponseDto updateUserPassword(
             String email, PasswordUpdateRequestDto passwordRequestDto) {
@@ -58,23 +61,19 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.intoModel(requestDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(User.UserRole.ROLE_CUSTOMER);
+        user.setRoles(Set.of(User.UserRole.ROLE_CUSTOMER));
         userRepository.save(user);
         return userMapper.intoDto(user);
     }
 
+    @Transactional
     @Override
-    public UserResponseDto updateUserRole(Long id, String newRole) {
+    public UserResponseDto updateUserRole(Long id, User.UserRole newRole) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "User by ID : " + id + " not found."));
-        try {
-            User.UserRole userRole = User.UserRole.valueOf(newRole.toUpperCase());
-            user.setRole(userRole);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid role: " + newRole);
-        }
 
+        user.getRoles().add(newRole);
         User updatedUser = userRepository.save(user);
         return userMapper.intoDto(updatedUser);
     }

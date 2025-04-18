@@ -1,10 +1,10 @@
 package accommodationbookingservice.service.notification;
 
+import accommodationbookingservice.config.TelegramBot;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
@@ -22,7 +22,6 @@ public class TelegramNotificationService implements NotificationService {
             throw new IllegalStateException(
                     "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not found in .env");
         }
-
         this.chatId = chatId;
         this.bot = new TelegramBot(botToken);
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
@@ -39,21 +38,6 @@ public class TelegramNotificationService implements NotificationService {
         } catch (TelegramApiException e) {
             throw new RuntimeException(
                     "Failed to send Telegram notification: " + e.getMessage(), e);
-        }
-    }
-
-    private static class TelegramBot extends org.telegram.telegrambots.bots.TelegramLongPollingBot {
-        public TelegramBot(String botToken) {
-            super(botToken);
-        }
-
-        @Override
-        public String getBotUsername() {
-            return "BookingBot";
-        }
-
-        @Override
-        public void onUpdateReceived(Update update) {
         }
     }
 }

@@ -15,14 +15,13 @@ import accommodationbookingservice.repository.PaymentRepository;
 import accommodationbookingservice.service.notification.NotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +32,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final NotificationService notificationService;
 
+    @Transactional
     @Override
     public BookingResponseDto createBooking(BookingRequestDto requestDto, User currentUser) {
         checkForPendingPayments(currentUser);
@@ -58,20 +58,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Page<BookingResponseDto> getBookings(Long userId, String status, Pageable pageable) {
-        Page<Booking> bookings;
-        if (userId != null && status != null) {
-            Booking.BookingStatus bookingStatus = matchStatusByRequestParameter(status);
-            bookings = bookingRepository.findByUserIdAndStatus(userId, bookingStatus, pageable);
-        } else if (userId != null) {
-            bookings = bookingRepository.findByUserId(userId, pageable);
-        } else if (status != null) {
-            Booking.BookingStatus bookingStatus = matchStatusByRequestParameter(status);
-            bookings = bookingRepository.findByStatus(bookingStatus, pageable);
-        } else {
-            bookings = bookingRepository.findAll(pageable);
-        }
+    @Transactional(readOnly = true)
+    public Page<BookingResponseDto> getBookings(
+            Long userId, Booking.BookingStatus status, Pageable pageable) {
 
+        Page<Booking> bookings =
+                bookingRepository.findByOptionalUserIdAndStatus(userId, status, pageable);
         return bookings.map(bookingMapper::intoDto);
     }
 
@@ -84,7 +76,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto getBookingById(Long id, User currentUser) {
         Booking booking = retrieveBookingById(id);
-        if (!currentUser.getRole().equals(User.UserRole.ROLE_MANAGER)
+        if (!currentUser.getRoles().contains(User.UserRole.ROLE_MANAGER)
                 && !booking.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException(
                     "Access denied: You are not authorized to view this booking.");
@@ -92,6 +84,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.intoDto(booking);
     }
 
+    @Transactional
     @Override
     public BookingResponseDto updateBookingDetails(
             Long id, BookingRequestDto requestDto, User currentUser) {
@@ -102,31 +95,31 @@ public class BookingServiceImpl implements BookingService {
                     "Access denied: You can only update your own bookings.");
         }
 
-        Accommodation accommodation = retrieveAccommodationById(requestDto.getAccommodationId());
-        LocalDate checkInDate = requestDto.getCheckInDate();
-        LocalDate checkOutDate = requestDto.getCheckOutDate();
         validateAccommodationAvailability(
-                accommodation, checkInDate, checkOutDate, booking.getId());
-
-        booking.setAccommodation(accommodation);
-        booking.setCheckInDate(checkInDate);
-        booking.setCheckOutDate(checkOutDate);
+                booking.getAccommodation(),
+                requestDto.getCheckInDate(),
+                requestDto.getCheckOutDate(),
+                id
+        );
+        bookingMapper.updateModelFromDto(booking, requestDto);
         Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.intoDto(updatedBooking);
     }
 
+    @Transactional
     @Override
     public BookingResponseDto updateBookingStatus(
             Long id, BookingStatusPatchRequestDto patchRequestDto) {
+
         Booking booking = retrieveBookingById(id);
-        Booking.BookingStatus newStatus =
-                Booking.BookingStatus.valueOf(patchRequestDto.getStatus().toUpperCase());
+        Booking.BookingStatus newStatus = patchRequestDto.getStatus();
         preventDuplicateCancellations(booking, newStatus);
         booking.setStatus(newStatus);
         Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.intoDto(updatedBooking);
     }
 
+    @Transactional
     @Override
     public void cancelBooking(Long id, User currentUser) {
         Booking booking = retrieveBookingById(id);
@@ -160,50 +153,24 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private Booking.BookingStatus matchStatusByRequestParameter(String status) {
-        try {
-            return Booking.BookingStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid booking status: " + status);
-        }
-    }
-
     private void validateAccommodationAvailability(Accommodation accommodation,
-                                          LocalDate checkInDate,
-                                          LocalDate checkOutDate,
-                                          Long excludeBookingId) {
-        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
-                accommodation, checkInDate, checkOutDate, excludeBookingId,
-                Booking.BookingStatus.CANCELED, Booking.BookingStatus.EXPIRED
+                                                   LocalDate checkInDate,
+                                                   LocalDate checkOutDate,
+                                                   Long excludeBookingId) {
+        int maxOccupancy = bookingRepository.findMaxOccupancy(
+                accommodation.getId(),
+                checkInDate,
+                checkOutDate,
+                excludeBookingId,
+                Booking.BookingStatus.CANCELED.name(),
+                Booking.BookingStatus.EXPIRED.name()
         );
-        int maxOccupancy = calculateMaxOccupancy(overlappingBookings, checkInDate, checkOutDate);
         if (maxOccupancy >= accommodation.getAvailability()) {
             throw new AccommodationNotAvailableException(
                     "Accommodation ID " + accommodation.getId()
                             + " is not available from " + checkInDate
                             + " to " + checkOutDate + ".");
         }
-    }
-
-    private int calculateMaxOccupancy(List<Booking> bookings, LocalDate start, LocalDate end) {
-        Map<LocalDate, Integer> occupancyByDate = new HashMap<>();
-        LocalDate current = start;
-        while (!current.isAfter(end)) {
-            int count = 0;
-            for (Booking booking : bookings) {
-                if (!booking.getCheckInDate().isAfter(current)
-                        && !booking.getCheckOutDate().isBefore(current)) {
-                    count++;
-                }
-            }
-            occupancyByDate.put(current, count);
-            current = current.plusDays(1);
-        }
-        return occupancyByDate.values()
-                .stream()
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(0);
     }
 
     private void preventDuplicateCancellations(

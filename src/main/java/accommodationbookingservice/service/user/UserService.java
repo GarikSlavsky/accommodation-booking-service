@@ -5,6 +5,7 @@ import accommodationbookingservice.dto.user.request.UserRegistrationRequestDto;
 import accommodationbookingservice.dto.user.request.UserUpdateRequestDto;
 import accommodationbookingservice.dto.user.response.UserResponseDto;
 import accommodationbookingservice.exceptions.RegistrationException;
+import accommodationbookingservice.model.User;
 
 public interface UserService {
     UserResponseDto updateUserName(String email, UserUpdateRequestDto updateDto);
@@ -16,5 +17,5 @@ public interface UserService {
     UserResponseDto register(UserRegistrationRequestDto requestDto)
             throws RegistrationException;
 
-    UserResponseDto updateUserRole(Long id, String newRole);
+    UserResponseDto updateUserRole(Long id, User.UserRole newRole);
 }

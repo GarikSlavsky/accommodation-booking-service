@@ -8,7 +8,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-@FieldMatch
+@FieldMatch(
+        firstField = "password", secondField = "confirmPassword", message = "Passwords must match.")
 @Schema(description = "Request DTO for registering a new user.")
 public class UserRegistrationRequestDto {
 

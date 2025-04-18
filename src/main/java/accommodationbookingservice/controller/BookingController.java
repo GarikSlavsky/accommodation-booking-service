@@ -3,6 +3,7 @@ package accommodationbookingservice.controller;
 import accommodationbookingservice.dto.booking.BookingRequestDto;
 import accommodationbookingservice.dto.booking.BookingResponseDto;
 import accommodationbookingservice.dto.booking.BookingStatusPatchRequestDto;
+import accommodationbookingservice.model.Booking;
 import accommodationbookingservice.model.User;
 import accommodationbookingservice.service.booking.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,7 +50,7 @@ public class BookingController {
     @Operation(summary = "Retrieves bookings based on user ID and their status for managers.")
     public Page<BookingResponseDto> getBookings(
             @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Booking.BookingStatus status,
             Pageable pageable) {
         return bookingService.getBookings(userId, status, pageable);
     }

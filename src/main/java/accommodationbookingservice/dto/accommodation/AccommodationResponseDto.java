@@ -1,5 +1,6 @@
 package accommodationbookingservice.dto.accommodation;
 
+import accommodationbookingservice.model.Accommodation;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.Data;
@@ -7,7 +8,7 @@ import lombok.Data;
 @Data
 public class AccommodationResponseDto {
     private Long id;
-    private String type; // e.g., HOUSE, APARTMENT
+    private Accommodation.AccommodationType type;
     private String location;
     private String size;
     private List<String> amenities;

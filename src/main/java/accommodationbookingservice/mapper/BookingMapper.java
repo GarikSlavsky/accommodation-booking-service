@@ -8,6 +8,7 @@ import accommodationbookingservice.model.Booking;
 import java.util.Optional;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 @Mapper(config = MapperConfig.class)
@@ -19,6 +20,10 @@ public interface BookingMapper {
     @Mapping(target = "accommodation", source = "accommodationId",
             qualifiedByName = "accommodationFromId")
     Booking intoModel(BookingRequestDto bookingRequestDto);
+
+    @Mapping(target = "accommodation", source = "accommodationId",
+            qualifiedByName = "accommodationFromId")
+    void updateModelFromDto(@MappingTarget Booking booking, BookingRequestDto bookingRequestDto);
 
     @Named("accommodationFromId")
     default Accommodation getAccommodation(Long id) {

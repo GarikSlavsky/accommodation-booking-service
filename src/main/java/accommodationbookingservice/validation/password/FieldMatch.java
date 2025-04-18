@@ -8,13 +8,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Constraint(validatedBy = PasswordValidator.class)
+@Constraint(validatedBy = FieldMatchValidator.class)
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface FieldMatch {
-    String message() default "The password and the confirmPassword fields must match.";
+    String message() default "The fields must match.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
+
+    // Names of the two fields to compare
+    String firstField();
+    String secondField();
 }
 

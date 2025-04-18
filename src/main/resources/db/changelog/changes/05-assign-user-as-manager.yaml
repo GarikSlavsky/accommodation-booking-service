@@ -3,10 +3,12 @@ databaseChangeLog:
       id: 05-assign-user-as-manager
       author: your-name
       changes:
-        - update:
-            tableName: users
+        - insert:
+            tableName: user_roles
             columns:
               - column:
-                  name: role
-                  value: MANAGER
-            where: email = 'emily@mail.com'
+                  name: user_id
+                  value: 1
+              - column:
+                  name: roles
+                  value: ROLE_MANAGER
