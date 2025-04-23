@@ -15,4 +15,6 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: mvn --batch-mode --update-snapshots verify
