@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 04-create-payments-table
-      author: mate-academy
+      author: Igor Neminuschii
       changes:
         - createTable:
             tableName: payments

@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 01-create-users-table
-      author: mate-academy
+      author: Igor Neminuschii
       changes:
         - createTable:
             tableName: users
@@ -39,19 +39,5 @@ databaseChangeLog:
                   type: BOOLEAN
                   constraints:
                     nullable: false
-        - createTable:
-            tableName: user_roles
-            columns:
-              - column:
-                  name: user_id
-                  type: BIGINT
-                  constraints:
-                    nullable: false
-                    foreignKeyName: fk_user_roles_users
-                    references: users(id)
-              - column:
-                  name: roles
-                  type: VARCHAR(50)
-                  constraints:
-                    nullable: false
+
 

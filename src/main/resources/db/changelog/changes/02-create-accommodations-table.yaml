@@ -1,7 +1,7 @@
 databaseChangeLog:
   - changeSet:
       id: 02-create-accommodations-table
-      author: mate-academy
+      author: Igor Neminuschii
       changes:
         - createTable:
             tableName: accommodations
