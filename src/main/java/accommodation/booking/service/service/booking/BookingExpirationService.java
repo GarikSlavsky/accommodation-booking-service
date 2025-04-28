@@ -3,8 +3,8 @@ package accommodation.booking.service.service.booking;
 import accommodation.booking.service.model.Accommodation;
 import accommodation.booking.service.model.Booking;
 import accommodation.booking.service.repository.BookingRepository;
+import accommodation.booking.service.service.notification.AccommodationNotificationUtil;
 import accommodation.booking.service.service.notification.BookingNotificationUtil;
-import accommodation.booking.service.service.notification.NotificationService;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookingExpirationService {
     private static final Logger logger = LoggerFactory.getLogger(BookingExpirationService.class);
     private final BookingRepository bookingRepository;
-    private final NotificationService notificationService;
     private final BookingNotificationUtil bookingNotificationUtil;
+    private final AccommodationNotificationUtil accommodationNotificationUtil;
 
     @Transactional
     @Scheduled(cron = "0 0 0 * * *") // Midnight daily
@@ -48,7 +48,7 @@ public class BookingExpirationService {
                 logger.info("Booking ID={} marked as EXPIRED.", booking.getId());
                 Accommodation accommodation = booking.getAccommodation();
                 bookingNotificationUtil.notifyBookingExpired(booking, accommodation);
-                bookingNotificationUtil.notifyAccommodationReleased(accommodation);
+                accommodationNotificationUtil.notifyAccommodationReleased(accommodation);
             } catch (Exception e) {
                 logger.error("Failed to process booking ID={} {}", booking.getId(), e.getMessage());
             }

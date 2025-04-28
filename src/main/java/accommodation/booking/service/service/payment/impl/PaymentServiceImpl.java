@@ -12,6 +12,7 @@ import accommodation.booking.service.repository.PaymentRepository;
 import accommodation.booking.service.service.notification.PaymentNotificationUtil;
 import accommodation.booking.service.service.payment.PaymentService;
 import accommodation.booking.service.service.payment.StripeService;
+import accommodation.booking.service.service.payment.util.PaymentServiceImplUtil;
 import com.stripe.model.checkout.Session;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +36,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final StripeService stripeService;
     private final PaymentMapper paymentMapper;
     private final PaymentNotificationUtil paymentNotificationUtil;
+    private final PaymentServiceImplUtil paymentServiceImplUtil;
 
     @Transactional
     @Override
@@ -49,9 +50,9 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalStateException("Payment already exists for this booking.");
         }
 
-        BigDecimal amountToPay = calculateAmountToPay(booking);
+        BigDecimal amountToPay = paymentServiceImplUtil.calculateAmountToPay(booking);
         Session session = stripeService.createSession(booking, amountToPay);
-        Payment payment = initializePayment(booking, session, amountToPay);
+        Payment payment = paymentServiceImplUtil.initializePayment(booking, session, amountToPay);
         Payment savedPayment = paymentRepository.save(payment);
         PaymentResponseDto responseDto = paymentMapper.intoDto(savedPayment);
         paymentNotificationUtil.notifyPaymentCreated(bookingId, amountToPay, session.getUrl());
@@ -63,7 +64,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Page<PaymentResponseDto> getPaymentsForUser(
             Long userId, User currentUser, Pageable pageable) {
 
-        checkoutAccessForUser(userId, currentUser);
+        paymentServiceImplUtil.checkoutAccessForUser(userId, currentUser);
         Page<Payment> payments = currentUser.getRoles().contains(ROLE_MANAGER)
                 ? paymentRepository.findAll(pageable)
                 : paymentRepository.findAllByBookingUserId(userId, pageable);
@@ -104,8 +105,8 @@ public class PaymentServiceImpl implements PaymentService {
                         "Payment not found, not owned by user, or not EXPIRED for ID: "
                                 + paymentId));
 
-        Booking booking = retrieveBookingById(payment.getBooking().getId());
-        BigDecimal amountToPay = calculateAmountToPay(booking);
+        Booking booking = paymentServiceImplUtil.retrieveBookingById(payment.getBooking().getId());
+        BigDecimal amountToPay = paymentServiceImplUtil.calculateAmountToPay(booking);
         Session session = stripeService.createSession(booking, amountToPay);
 
         payment.setSessionUrl(session.getUrl());
@@ -122,9 +123,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String handlePaymentSuccess(String sessionId) {
         logger.info("Processing payment success for sessionId: {}", sessionId);
-        validateSessionId(sessionId);
+        paymentServiceImplUtil.validateSessionId(sessionId);
         Session session = stripeService.retrieveSession(sessionId);
-        Payment payment = retrievePayment(sessionId);
+        Payment payment = paymentServiceImplUtil.retrievePayment(sessionId);
 
         if (PAID_PAYMENT_STATUS.equals(session.getPaymentStatus())) {
             logger.info("Payment status is PAID for sessionId: {}", sessionId);
@@ -143,52 +144,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     @Override
     public String handlePaymentCancel(String sessionId) {
-        validateSessionId(sessionId);
-        Payment payment = retrievePayment(sessionId);
+        paymentServiceImplUtil.validateSessionId(sessionId);
+        Payment payment = paymentServiceImplUtil.retrievePayment(sessionId);
         paymentNotificationUtil.notifyCancelledPayment(payment);
         return "Payment canceled. You can try again later.";
-    }
-
-    private BigDecimal calculateAmountToPay(Booking booking) {
-        long days = booking.getCheckInDate().until(booking.getCheckOutDate()).getDays();
-        return booking.getAccommodation()
-                .getDailyRate()
-                .multiply(BigDecimal.valueOf(days));
-    }
-
-    private Payment initializePayment(Booking booking, Session session, BigDecimal amountToPay) {
-        Payment payment = new Payment();
-        payment.setBooking(booking);
-        payment.setStatus(Payment.PaymentStatus.PENDING);
-        payment.setSessionUrl(session.getUrl());
-        payment.setSessionId(session.getId());
-        payment.setAmountToPay(amountToPay);
-        return payment;
-    }
-
-    private void checkoutAccessForUser(Long userId, User currentUser) {
-        if (!currentUser.getId().equals(userId)
-                && !currentUser.getRoles().contains(ROLE_MANAGER)) {
-            throw new AccessDeniedException(
-                    "You can only view your own payments unless you’re a manager.");
-        }
-    }
-
-    private void validateSessionId(String sessionId) {
-        if (sessionId == null || sessionId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Session ID is invalid or missing");
-        }
-    }
-
-    private Payment retrievePayment(String sessionId) {
-        return paymentRepository.findBySessionId(sessionId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Payment not found for session: " + sessionId));
-    }
-
-    private Booking retrieveBookingById(Long bookingId) {
-        return bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Booking not found with ID: " + bookingId));
     }
 }

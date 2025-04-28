@@ -61,19 +61,4 @@ public class BookingNotificationUtil {
             logger.warn("Failed to send notification.");
         }
     }
-
-    public void notifyAccommodationReleased(Accommodation accommodation) {
-        try {
-            notificationService.sendNotification(
-                    String.format("Accommodation released: ID=%d, Type=%s, Location=%s",
-                            accommodation.getId(),
-                            accommodation.getType(),
-                            accommodation.getLocation())
-            );
-        } catch (Exception e) {
-            logger.error(
-                    "Error sending accommodation release notification for Accommodation ID: {}",
-                    accommodation.getId(), e);
-        }
-    }
 }

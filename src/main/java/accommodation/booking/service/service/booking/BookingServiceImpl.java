@@ -14,6 +14,7 @@ import accommodation.booking.service.model.User;
 import accommodation.booking.service.repository.AccommodationRepository;
 import accommodation.booking.service.repository.BookingRepository;
 import accommodation.booking.service.repository.PaymentRepository;
+import accommodation.booking.service.service.notification.AccommodationNotificationUtil;
 import accommodation.booking.service.service.notification.BookingNotificationUtil;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private final PaymentRepository paymentRepository;
     private final BookingMapper bookingMapper;
     private final BookingNotificationUtil bookingNotificationUtil;
+    private final AccommodationNotificationUtil accommodationNotificationUtil;
 
     @Transactional
     @Override
@@ -131,7 +133,7 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
         Accommodation accommodation = booking.getAccommodation();
         bookingNotificationUtil.notifyBookingCancelled(booking, accommodation);
-        bookingNotificationUtil.notifyAccommodationReleased(accommodation);
+        accommodationNotificationUtil.notifyAccommodationReleased(accommodation);
     }
 
     private void checkForPendingPayments(User currentUser) {
