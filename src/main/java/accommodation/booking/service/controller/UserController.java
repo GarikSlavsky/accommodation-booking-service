@@ -34,7 +34,6 @@ public class UserController {
             @RequestBody @Valid UserUpdateRequestDto updateRequestDto,
             Authentication authentication
     ) {
-
         User user = (User) authentication.getPrincipal();
         String email = user.getEmail();
         return userService.updateUserName(email, updateRequestDto);

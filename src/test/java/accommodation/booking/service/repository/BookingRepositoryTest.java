@@ -56,12 +56,12 @@ public class BookingRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        validUserId = 1L;
+        validUserId = 2L;
         validStatus = Booking.BookingStatus.PENDING;
         pageable = PageRequest.of(0, 10);
         accommodationId = 15L;
-        checkInDate = LocalDate.of(2025, 5, 1);
-        checkOutDate = LocalDate.of(2025, 5, 15);
+        checkInDate = LocalDate.of(2026, 5, 1);
+        checkOutDate = LocalDate.of(2026, 5, 15);
         excludeBookingId = null; // Default: no booking excluded
         canceledStatus = "CANCELED";
         expiredStatus = "EXPIRED";
@@ -212,8 +212,8 @@ public class BookingRepositoryTest {
     @Test
     @DisplayName("Find max occupancy for single-day date range")
     void findMaxOccupancy_SingleDayRange_ReturnsCorrectOccupancy() {
-        checkInDate = LocalDate.of(2025, 5, 8);
-        checkOutDate = LocalDate.of(2025, 5, 8);
+        checkInDate = LocalDate.of(2026, 5, 8);
+        checkOutDate = LocalDate.of(2026, 5, 8);
         int actual = bookingRepository.findMaxOccupancy(
                 accommodationId, checkInDate, checkOutDate, excludeBookingId,
                 canceledStatus, expiredStatus);

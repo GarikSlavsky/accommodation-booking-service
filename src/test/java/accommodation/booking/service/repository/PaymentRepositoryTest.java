@@ -22,8 +22,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Sql(scripts = {
         "classpath:database/user/add-users.sql",
+        "classpath:database/user/add-additional-users.sql",
         "classpath:database/accommodation/add-accommodations.sql",
         "classpath:database/booking/add-bookings.sql",
+        "classpath:database/booking/add-additional-bookings.sql",
         "classpath:database/payment/add-payments.sql"
 }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @Sql(scripts = {
@@ -45,7 +47,7 @@ public class PaymentRepositoryTest {
     @BeforeEach
     void setUp() {
         validPaymentId = 23L;
-        validUserId = 1L;
+        validUserId = 2L;
         validStatus = Payment.PaymentStatus.PENDING;
     }
 

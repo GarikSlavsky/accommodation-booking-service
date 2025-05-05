@@ -36,7 +36,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final StripeService stripeService;
     private final PaymentMapper paymentMapper;
     private final PaymentNotificationUtil paymentNotificationUtil;
-    private final PaymentServiceImplUtil paymentServiceImplUtil;
 
     @Transactional
     @Override
@@ -50,9 +49,9 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalStateException("Payment already exists for this booking.");
         }
 
-        BigDecimal amountToPay = paymentServiceImplUtil.calculateAmountToPay(booking);
+        BigDecimal amountToPay = PaymentServiceImplUtil.calculateAmountToPay(booking);
         Session session = stripeService.createSession(booking, amountToPay);
-        Payment payment = paymentServiceImplUtil.initializePayment(booking, session, amountToPay);
+        Payment payment = PaymentServiceImplUtil.initializePayment(booking, session, amountToPay);
         Payment savedPayment = paymentRepository.save(payment);
         PaymentResponseDto responseDto = paymentMapper.intoDto(savedPayment);
         paymentNotificationUtil.notifyPaymentCreated(bookingId, amountToPay, session.getUrl());
@@ -64,7 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
     public Page<PaymentResponseDto> getPaymentsForUser(
             Long userId, User currentUser, Pageable pageable) {
 
-        paymentServiceImplUtil.checkoutAccessForUser(userId, currentUser);
+        PaymentServiceImplUtil.checkoutAccessForUser(userId, currentUser);
         Page<Payment> payments = currentUser.getRoles().contains(ROLE_MANAGER)
                 ? paymentRepository.findAll(pageable)
                 : paymentRepository.findAllByBookingUserId(userId, pageable);
@@ -105,8 +104,9 @@ public class PaymentServiceImpl implements PaymentService {
                         "Payment not found, not owned by user, or not EXPIRED for ID: "
                                 + paymentId));
 
-        Booking booking = paymentServiceImplUtil.retrieveBookingById(payment.getBooking().getId());
-        BigDecimal amountToPay = paymentServiceImplUtil.calculateAmountToPay(booking);
+        Booking booking = PaymentServiceImplUtil.retrieveBookingById(
+                payment.getBooking().getId(), bookingRepository);
+        BigDecimal amountToPay = PaymentServiceImplUtil.calculateAmountToPay(booking);
         Session session = stripeService.createSession(booking, amountToPay);
 
         payment.setSessionUrl(session.getUrl());
@@ -123,9 +123,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String handlePaymentSuccess(String sessionId) {
         logger.info("Processing payment success for sessionId: {}", sessionId);
-        paymentServiceImplUtil.validateSessionId(sessionId);
+        PaymentServiceImplUtil.validateSessionId(sessionId);
         Session session = stripeService.retrieveSession(sessionId);
-        Payment payment = paymentServiceImplUtil.retrievePayment(sessionId);
+        Payment payment = PaymentServiceImplUtil.retrievePayment(sessionId, paymentRepository);
 
         if (PAID_PAYMENT_STATUS.equals(session.getPaymentStatus())) {
             logger.info("Payment status is PAID for sessionId: {}", sessionId);
@@ -144,8 +144,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     @Override
     public String handlePaymentCancel(String sessionId) {
-        paymentServiceImplUtil.validateSessionId(sessionId);
-        Payment payment = paymentServiceImplUtil.retrievePayment(sessionId);
+        PaymentServiceImplUtil.validateSessionId(sessionId);
+        Payment payment = PaymentServiceImplUtil.retrievePayment(sessionId, paymentRepository);
         paymentNotificationUtil.notifyCancelledPayment(payment);
         return "Payment canceled. You can try again later.";
     }

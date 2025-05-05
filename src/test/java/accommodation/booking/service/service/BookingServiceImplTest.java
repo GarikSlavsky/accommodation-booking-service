@@ -3,9 +3,9 @@ package accommodation.booking.service.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
 import accommodation.booking.service.dto.booking.BookingRequestDto;
 import accommodation.booking.service.dto.booking.BookingResponseDto;
@@ -21,7 +21,7 @@ import accommodation.booking.service.repository.PaymentRepository;
 import accommodation.booking.service.service.booking.BookingServiceImpl;
 import accommodation.booking.service.service.notification.AccommodationNotificationUtil;
 import accommodation.booking.service.service.notification.BookingNotificationUtil;
-import java.time.LocalDate;
+import accommodation.booking.service.util.BookingTestUtil;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +37,16 @@ import org.springframework.security.access.AccessDeniedException;
 @ExtendWith(MockitoExtension.class)
 public class BookingServiceImplTest {
     private static final Booking.BookingStatus STATUS_PENDING = Booking.BookingStatus.PENDING;
+    private static final Long ACCOMMODATION_ID = 18L;
+    private static final Long BOOKING_ID = 1L;
+    private static final Long USER_ID = 1L;
+    private static final Long DIFFERENT_USER_ID = 2L;
+    private BookingRequestDto requestDto;
+    private User currentUser;
+    private User differentUser;
+    private Accommodation accommodation;
+    private Booking booking;
+    private BookingResponseDto responseDto;
 
     @Mock
     private BookingRepository bookingRepository;
@@ -59,25 +69,14 @@ public class BookingServiceImplTest {
     @InjectMocks
     private BookingServiceImpl bookingService;
 
-    private BookingRequestDto requestDto;
-    private User currentUser;
-    private User differentUser;
-    private Accommodation accommodation;
-    private Booking booking;
-    private BookingResponseDto responseDto;
-    private static final Long ACCOMMODATION_ID = 1L;
-    private static final Long BOOKING_ID = 1L;
-    private static final Long USER_ID = 1L;
-    private static final Long DIFFERENT_USER_ID = 2L;
-
     @BeforeEach
     void setUp() {
-        requestDto = initializeBookingRequestDto();
-        currentUser = initializeUser(USER_ID);
-        differentUser = initializeUser(DIFFERENT_USER_ID);
-        accommodation = initializeAccommodation();
-        booking = initializeBooking(requestDto);
-        responseDto = initializeBookingResponseDto(booking);
+        requestDto = BookingTestUtil.initializeBookingRequestDto();
+        currentUser = BookingTestUtil.initializeUser(USER_ID);
+        differentUser = BookingTestUtil.initializeUser(DIFFERENT_USER_ID);
+        accommodation = BookingTestUtil.initializeAccommodation();
+        booking = BookingTestUtil.initializeBooking(requestDto, currentUser, accommodation);
+        responseDto = BookingTestUtil.initializeBookingResponseDto(booking);
     }
 
     @Test
@@ -223,48 +222,5 @@ public class BookingServiceImplTest {
         verify(bookingRepository, never()).save(any());
         verify(bookingNotificationUtil, never()).notifyBookingCancelled(any(), any());
         verify(accommodationNotificationUtil, never()).notifyAccommodationReleased(any());
-    }
-
-    private BookingRequestDto initializeBookingRequestDto() {
-        BookingRequestDto dto = new BookingRequestDto();
-        dto.setAccommodationId(ACCOMMODATION_ID);
-        dto.setCheckInDate(LocalDate.of(2025, 5, 1));
-        dto.setCheckOutDate(LocalDate.of(2025, 5, 5));
-        return dto;
-    }
-
-    private User initializeUser(Long userId) {
-        User user = new User();
-        user.setId(userId);
-        return user;
-    }
-
-    private Accommodation initializeAccommodation() {
-        Accommodation accommodation = new Accommodation();
-        accommodation.setId(ACCOMMODATION_ID);
-        accommodation.setAvailability(5);
-        return accommodation;
-    }
-
-    private Booking initializeBooking(BookingRequestDto dto) {
-        Booking booking = new Booking();
-        booking.setId(1L);
-        booking.setAccommodation(accommodation);
-        booking.setUser(currentUser);
-        booking.setCheckInDate(dto.getCheckInDate());
-        booking.setCheckOutDate(dto.getCheckOutDate());
-        booking.setStatus(STATUS_PENDING);
-        return booking;
-    }
-
-    private BookingResponseDto initializeBookingResponseDto(Booking booking) {
-        BookingResponseDto dto = new BookingResponseDto();
-        dto.setId(booking.getId());
-        dto.setAccommodationId(ACCOMMODATION_ID);
-        dto.setUserId(USER_ID);
-        dto.setCheckInDate(booking.getCheckInDate());
-        dto.setCheckOutDate(booking.getCheckOutDate());
-        dto.setStatus(booking.getStatus());
-        return dto;
     }
 }

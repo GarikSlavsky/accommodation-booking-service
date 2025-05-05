@@ -3,7 +3,6 @@ package accommodation.booking.service.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +43,7 @@ public class PaymentServiceImplTest {
     private static final Long OTHER_USER_ID = 2L;
     private static final String SESSION_ID = "session_123";
     private static final String PAID_PAYMENT_STATUS = "paid";
+    private static final Payment.PaymentStatus EXPIRED_STATUS = Payment.PaymentStatus.EXPIRED;
     private Booking booking;
     private User currentUser;
     private Role role;
@@ -71,20 +71,15 @@ public class PaymentServiceImplTest {
     @Mock
     private PaymentNotificationUtil paymentNotificationUtil;
 
-    @Mock
-    private PaymentServiceImplUtil paymentServiceImplUtil;
-
     @BeforeEach
     void setUp() {
-        PaymentServiceTestUtil paymentServiceTestUtil =
-                new PaymentServiceTestUtil(paymentServiceImplUtil);
-        role = paymentServiceTestUtil.initializeRole();
-        currentUser = paymentServiceTestUtil.initializeUser(role);
-        booking = paymentServiceTestUtil.initializeBooking(currentUser);
-        payment = paymentServiceTestUtil.initializePayment(booking);
-        responseDto = paymentServiceTestUtil.initializePaymentResponseDto(payment);
-        stripeSession = paymentServiceTestUtil.initializeStripeSession();
-        amount = paymentServiceImplUtil.calculateAmountToPay(booking);
+        role = PaymentServiceTestUtil.initializeRole();
+        currentUser = PaymentServiceTestUtil.initializeUser(role);
+        booking = PaymentServiceTestUtil.initializeBooking(currentUser);
+        payment = PaymentServiceTestUtil.initializePayment(booking);
+        responseDto = PaymentServiceTestUtil.initializePaymentResponseDto(payment);
+        stripeSession = PaymentServiceTestUtil.initializeStripeSession();
+        amount = PaymentServiceImplUtil.calculateAmountToPay(booking);
         pageable = PageRequest.of(0, 10);
     }
 
@@ -95,11 +90,8 @@ public class PaymentServiceImplTest {
         when(bookingRepository.findBookingByIdAndUserId(VALID_ID, VALID_ID))
                 .thenReturn(Optional.of(booking));
         when(paymentRepository.findByBooking(booking)).thenReturn(Optional.empty());
-        when(stripeService.createSession(booking, amount))
-                .thenReturn(stripeSession);
-        when(paymentServiceImplUtil.initializePayment(booking, stripeSession, amount))
-                .thenReturn(any(Payment.class));
-        when(paymentRepository.save(payment)).thenReturn(payment);
+        when(stripeService.createSession(booking, amount)).thenReturn(stripeSession);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
         when(paymentMapper.intoDto(payment)).thenReturn(responseDto);
 
         // When: Call the service method
@@ -158,8 +150,6 @@ public class PaymentServiceImplTest {
     @DisplayName("Get payments for another user ID without manager role.")
     void getPaymentsForUser_UnauthorizedUserId_ThrowsAccessDeniedException() {
         // Given: Non-manager user requests another user's payments
-        doCallRealMethod().when(paymentServiceImplUtil).
-                checkoutAccessForUser(OTHER_USER_ID, currentUser);
         // When/Then: Verify that an exception is thrown
         assertThrows(AccessDeniedException.class,
                 () -> paymentService.getPaymentsForUser(OTHER_USER_ID, currentUser, pageable));
@@ -191,14 +181,43 @@ public class PaymentServiceImplTest {
     }
 
     @Test
-    @DisplayName("Handle payment success with paid status updates payment and returns success message")
+    @DisplayName("""
+            Renew payment session for expired payment.
+            Returns PaymentResponseDto with pending status"""
+    )
+    void renewPaymentSession_ExpiredPayment_ReturnsPaymentResponseDto() {
+        //Given:
+        PaymentResponseDto expected = responseDto;
+        when(paymentRepository.findByIdAndUserIdAndStatus(VALID_ID, VALID_ID, EXPIRED_STATUS))
+                .thenReturn(Optional.of(payment));
+        payment.setStatus(Payment.PaymentStatus.EXPIRED);
+        when(bookingRepository.findById(VALID_ID)).thenReturn(Optional.of(booking));
+        when(stripeService.createSession(booking, amount)).thenReturn(stripeSession);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+        when(paymentMapper.intoDto(payment)).thenReturn(responseDto);
+
+        //When:
+        PaymentResponseDto actual = paymentService.renewPaymentSession(VALID_ID, currentUser);
+        // Then: Verify the result and interactions
+        assertThat(actual).isEqualTo(responseDto);
+        assertThat(actual.getStatus()).isEqualTo(Payment.PaymentStatus.PENDING);
+        assertThat(actual.getAmountToPay()).isEqualTo(amount);
+        verify(bookingRepository).findById(VALID_ID);
+        verify(paymentRepository).findByIdAndUserIdAndStatus(VALID_ID, VALID_ID, EXPIRED_STATUS);
+        verify(stripeService).createSession(booking, amount);
+        verify(paymentMapper).intoDto(payment);
+    }
+
+    @Test
+    @DisplayName("""
+            Handle payment success with paid status updates payment and returns success message"""
+    )
     void handlePaymentSuccess_PaidStatus_UpdatesPaymentAndReturnsSuccessMessage() {
         // Given: Valid session ID with paid status
         stripeSession.setPaymentStatus(PAID_PAYMENT_STATUS);
         when(stripeService.retrieveSession(SESSION_ID)).thenReturn(stripeSession);
-        when(paymentServiceImplUtil.retrievePayment(SESSION_ID)).thenReturn(payment);
-        when(paymentRepository.save(payment)).thenReturn(payment);
-
+        when(paymentRepository.findBySessionId(SESSION_ID)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
         // When: Call the service method
         String result = paymentService.handlePaymentSuccess(SESSION_ID);
 

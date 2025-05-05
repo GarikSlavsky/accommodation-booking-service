@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class AccommodationNotificationUtil {
-    private static final Logger logger = LoggerFactory.getLogger(AccommodationNotificationUtil.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(AccommodationNotificationUtil.class);
     private final NotificationService notificationService;
 
     public void notifyAccommodationReleased(Accommodation accommodation) {

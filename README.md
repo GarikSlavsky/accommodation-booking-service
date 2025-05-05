@@ -111,6 +111,14 @@ Built with Spring Boot, this project showcases expertise in backend development,
 
 - `Role`: Enum (MANAGER, CUSTOMER)
 
+***Role:***
+
+- `ID`: Long (Primary key)
+
+- `Name`: String
+
+- `RoleName`: Enum (MANAGER, CUSTOMER)
+
 ***Booking:***
 
 - `ID`: Long (Primary key)
@@ -196,6 +204,16 @@ Built with Spring Boot, this project showcases expertise in backend development,
 - `GET /payments/success`: Handle successful Stripe payments.
 
 - `GET /payments/cancel`: Handle canceled Stripe payments.
+
+## Postman documentation
+
+For detailed API testing instructions, visit the [Postman Collection](https://web.postman.co/workspace/e2a3c8ec-9568-4c61-8556-8c61dabec80f/documentation/41098914-c567dbd5-518a-4e56-a9a7-74888b78e426).
+
+## Model Diagram
+
+Below is the **model diagram**, which illustrates the structure of entities and their relationships in the application:
+
+![Model Diagram](docs/schema.JPG)
 
 ## Prerequisites
 

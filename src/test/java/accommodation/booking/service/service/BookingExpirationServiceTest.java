@@ -21,9 +21,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith( MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class BookingExpirationServiceTest {
-
+    private static final Long BOOKING_ID = 1L;
+    private static final Long ACCOMMODATION_ID = 1L;
+    private Booking booking;
+    private Accommodation accommodation;
     @Mock
     private BookingRepository bookingRepository;
 
@@ -35,11 +38,6 @@ public class BookingExpirationServiceTest {
 
     @InjectMocks
     private BookingExpirationService bookingExpirationService;
-
-    private Booking booking;
-    private Accommodation accommodation;
-    private static final Long BOOKING_ID = 1L;
-    private static final Long ACCOMMODATION_ID = 1L;
 
     @BeforeEach
     void setUp() {

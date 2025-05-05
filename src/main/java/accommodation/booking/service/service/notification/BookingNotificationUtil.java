@@ -43,10 +43,8 @@ public class BookingNotificationUtil {
         try {
             notificationService.sendNotification(
                     String.format("Booking expired: ID=%d, Accommodation=%s, Dates=%s to %s",
-                            booking.getId(),
-                            accommodation.getId(),
-                            booking.getCheckInDate(),
-                            booking.getCheckOutDate())
+                            booking.getId(), accommodation.getId(),
+                            booking.getCheckInDate(), booking.getCheckOutDate())
             );
         } catch (Exception e) {
             logger.warn("Failed to send notification for booking ID={}: {}",

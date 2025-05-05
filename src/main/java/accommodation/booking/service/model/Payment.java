@@ -35,7 +35,7 @@ public class Payment {
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String sessionUrl;
 
     @Column(unique = true, nullable = false)
