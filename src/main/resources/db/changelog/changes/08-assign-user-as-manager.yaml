@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: assign-user-as-manager
+      author: Igor Neminuschii
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: email
+                  value: emily@mail.com
+              - column:
+                  name: first_name
+                  value: Emily
+              - column:
+                  name: last_name
+                  value: Smith
+              - column:
+                  name: password
+                  value: "$2a$10$O8udrogm2Vy6ezKP8dRx8uftCEdmWVYk8ExYjRIHEOB.Yvm3BmKz6"
+              - column:
+                  name: is_deleted
+                  value: false
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: '1'
+              - column:
+                  name: role_id
+                  value: '1'
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  value: '1'
+              - column:
+                  name: role_id
+                  value: '2'
