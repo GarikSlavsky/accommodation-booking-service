@@ -315,3 +315,4 @@ docker build -t accommodation-booking-service .
 ```aiignore
 docker run -p 8080:8080 --env-file .env accommodation-booking-service
 ```
+
